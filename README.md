@@ -1,0 +1,2 @@
+# Docs
+About MagicLamp Ecosystem
