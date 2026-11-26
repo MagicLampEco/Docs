@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MagicLamp Ecosystem — Whitepaper</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1f2328; --muted: #5b6270; --line: #d9d6cf; --card: #ffffff;
+    --lamp: #b7791f; --lamp-soft: #fbeed3;
+    --magic: #6b46c1; --magic-soft: #ece6fb;
+    --ring: #2b6cb0; --ring-soft: #e1ecf8;
+    --green: #2f855a; --green-soft: #e3f3ea;
+    --ok: #2f855a; --warn: #b7791f; --no: #9b2c2c;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171b; --fg: #e6e6e3; --muted: #a2a8b3; --line: #343841; --card: #1d2026;
+      --lamp: #e2a74a; --lamp-soft: #3a2e17; --magic: #a88bf0; --magic-soft: #2c2445;
+      --ring: #6aa6e6; --ring-soft: #1d2d42; --green: #68c391; --green-soft: #1b3326;
+      --ok: #68c391; --warn: #e2a74a; --no: #e07a7a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171b; --fg: #e6e6e3; --muted: #a2a8b3; --line: #343841; --card: #1d2026;
+    --lamp: #e2a74a; --lamp-soft: #3a2e17; --magic: #a88bf0; --magic-soft: #2c2445;
+    --ring: #6aa6e6; --ring-soft: #1d2d42; --green: #68c391; --green-soft: #1b3326;
+    --ok: #68c391; --warn: #e2a74a; --no: #e07a7a;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 18px/1.6 "Times New Roman", Times, "Liberation Serif", serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+  h1, h2, h3, table, figcaption, .status, nav, dl.glossary dt { font-family: "Times New Roman", Times, "Liberation Serif", serif; }
+  p, li, dd, figcaption { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+  h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 .4rem; text-align: center; }
+  h1 + .sub { text-align: center; }
+  h2 { font-size: 1.35rem; margin: 3rem 0 .8rem; padding-top: .6rem; border-top: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 1.8rem 0 .4rem; }
+  p { margin: .7rem 0; }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; }
+  p.tcap { text-align: center; color: var(--fg); font-weight: 700; margin: 1.4rem 0 .3rem; }
+  p.tcap + .table-wrap { margin-top: .3rem; }
+  .lede { font-size: 1.12rem; }
+  nav { font-size: .92rem; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1.2rem; margin: 1.5rem 0; }
+  nav ol { margin: .3rem 0 0; padding-left: 1.4rem; columns: 2; column-gap: 2rem; }
+  nav a { color: inherit; text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  figure { margin: 1.6rem 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: .9rem; color: var(--muted); margin-top: .6rem; text-align: center; }
+  .callout { background: var(--card); border-left: 4px solid var(--no); padding: .8rem 1.1rem; border-radius: 0 10px 10px 0; margin: 1.2rem 0; }
+  .table-wrap { overflow-x: auto; margin: 1rem 0; }
+  table.compare { min-width: 640px; }
+  table.compare th[scope="row"] { color: inherit; width: 7.5rem; }
+  table.compare td:not(:first-child), table.compare th:not(:first-child) { width: 30%; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .status { display: inline-block; font-size: .75rem; font-weight: 600; padding: .05rem .5rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .s-build { color: var(--warn); } .s-not { color: var(--no); }
+  dl.glossary { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.2rem; }
+  dl.glossary dt { font-weight: 600; }
+  dl.glossary dd { margin: 0; }
+  @media (max-width: 560px) {
+    nav ol { columns: 1; }
+    dl.glossary { grid-template-columns: 1fr; }
+    dl.glossary dd { margin-bottom: .5rem; }
+  }
+  .t { font-family: "Times New Roman", Times, "Liberation Serif", serif; fill: var(--fg); }
+  .m { fill: var(--muted); }
+  ol.notice li { margin-bottom: .4rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; }
+  .copybar { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 10;
+    display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; }
+  .copybar button { font: 600 .9rem/1 "Times New Roman", Times, "Liberation Serif", serif; padding: .65rem 1rem; border-radius: 8px; cursor: pointer;
+    background: var(--fg); color: var(--bg); border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .copybar button[disabled] { opacity: .6; cursor: progress; }
+  .copybar output { font-size: .8rem; background: var(--card); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 6px; padding: .3rem .6rem; max-width: 18rem; text-align: right; }
+  .copybar output:empty { display: none; }
+  @media print { .copybar { display: none; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>MagicLamp Ecosystem</h1>
+<p class="sub">Whitepaper · English edition · 26 November 2026</p>
+
+<p class="lede">MagicLamp is a family of services and applications built on the Cardano blockchain. Its economy rests on three tokens, each with a single job. <strong>LAMP</strong>, the base token, is what people hold; it gives a voice in decisions and, placed in a personal vault, steadily produces <strong>MAGIC</strong>, the credit token people consume to use services. <strong>RING</strong>, the anchor token, is received by those who contribute resources to build the ecosystem. This paper explains how the pieces fit together, who is responsible for what, how decisions are made, and which parts are not built yet.</p>
+
+<nav aria-label="Contents">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#units">Three tokens, three jobs</a></li>
+    <li><a href="#architecture">How the ecosystem is built</a></li>
+    <li><a href="#magic">From LAMP to MAGIC</a></li>
+    <li><a href="#supply">A ceiling, not a stockpile</a></li>
+    <li><a href="#allocation">How the 36 billion are shared</a></li>
+    <li><a href="#receive">How people receive LAMP</a></li>
+    <li><a href="#roles">Who does what</a></li>
+    <li><a href="#governance">How decisions are made</a></li>
+    <li><a href="#verify">Recognizing genuine LAMP</a></li>
+    <li><a href="#status">Where things stand</a></li>
+    <li><a href="#risks">Risks and limits</a></li>
+    <li><a href="#eligibility">Who LAMP is not for</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+    <li><a href="#notice">Important notice</a></li>
+  </ol>
+</nav>
+
+<div class="callout">
+  <strong>Before you read on.</strong> The official LAMP token has not yet been created on Cardano's main network, and no date has been set. There is no official LAMP in circulation, no market for it, and no independent audit of its contracts. LAMP is not intended for people in Vietnam or the United States, or for sanctioned persons (section 12).
+</div>
+
+<!-- 1 -->
+<h2 id="units">1. Three tokens, three jobs</h2>
+
+<p>Most token projects ask a single token to do everything: pay for things, store value and carry votes. Those roles pull against each other. MagicLamp separates them. LAMP decides <em>who takes part and who has a say</em>. MAGIC decides <em>who can use a service right now</em>. RING recognizes <em>who has contributed to building it</em>.</p>
+
+<figure>
+<svg viewBox="0 0 720 230" role="img" aria-labelledby="f1t">
+  <title id="f1t">The three tokens of the ecosystem and their roles</title>
+  <rect x="10" y="20" width="220" height="190" rx="14" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+  <text x="120" y="58" text-anchor="middle" class="t" font-size="24" font-weight="700" fill="var(--lamp)">LAMP</text>
+  <text x="120" y="84" text-anchor="middle" class="t m" font-size="13">base token</text>
+  <text x="120" y="118" text-anchor="middle" class="t" font-size="14">Can be sent to anyone</text>
+  <text x="120" y="140" text-anchor="middle" class="t" font-size="14">Never more than 36 billion</text>
+  <text x="120" y="162" text-anchor="middle" class="t" font-size="14">Produces MAGIC</text>
+  <text x="120" y="184" text-anchor="middle" class="t" font-size="14">Counts toward a voice</text>
+  <rect x="250" y="20" width="220" height="190" rx="14" fill="var(--magic-soft)" stroke="var(--magic)" stroke-width="2"/>
+  <text x="360" y="58" text-anchor="middle" class="t" font-size="24" font-weight="700" fill="var(--magic)">MAGIC</text>
+  <text x="360" y="84" text-anchor="middle" class="t m" font-size="13">credit token</text>
+  <text x="360" y="118" text-anchor="middle" class="t" font-size="14">Stays with its owner</text>
+  <text x="360" y="140" text-anchor="middle" class="t" font-size="14">Fades if left unused</text>
+  <text x="360" y="162" text-anchor="middle" class="t" font-size="14">Gone once consumed</text>
+  <text x="360" y="184" text-anchor="middle" class="t" font-size="14">Consumed by services</text>
+  <rect x="490" y="20" width="220" height="190" rx="14" fill="var(--ring-soft)" stroke="var(--ring)" stroke-width="2"/>
+  <text x="600" y="58" text-anchor="middle" class="t" font-size="24" font-weight="700" fill="var(--ring)">RING</text>
+  <text x="600" y="84" text-anchor="middle" class="t m" font-size="13">anchor token</text>
+  <text x="600" y="118" text-anchor="middle" class="t" font-size="14">Received for</text>
+  <text x="600" y="140" text-anchor="middle" class="t" font-size="14">contributions</text>
+  <text x="600" y="162" text-anchor="middle" class="t" font-size="14">Meant for Phoenix DIDs</text>
+  <text x="600" y="184" text-anchor="middle" class="t" font-size="14">Recognizes real resources</text>
+</svg>
+<figcaption>Figure 1. Each token has one job.</figcaption>
+</figure>
+
+<p><strong>LAMP, the base token.</strong> A base token is the asset the rest of the economy rests on: MAGIC is produced from it, and it is the token that can be held in any ordinary wallet. Like ADA, LAMP moves freely between ordinary Cardano wallets, with no limit on where it can go. Putting it in a vault does not lock it: its owner can take it out at any time. Only LAMP its owner chooses to commit for voting is held for a set period (section 8). It is useful in two ways: kept in a personal or organizational vault it produces MAGIC (section 3), and it is one of the ingredients of a person's voice in decisions (section 8). It is designed for use inside the ecosystem, not as an investment.</p>
+
+<p><strong>MAGIC, the credit token.</strong> A credit token is a right to use services, recorded on the blockchain and tied to one identity. MAGIC is locked in the vault of the Phoenix DID that owns it. It is closer to an allowance than to money. It cannot be handed to someone else, it slowly fades if nobody uses it, and it disappears once consumed. The project runs no market for MAGIC and supports none. MAGIC is not operating yet.</p>
+
+<p><strong>RING, the anchor token.</strong> An anchor token ties recognition to real contributions. It is received only for resources actually contributed to the ecosystem, and it is designed to move only between addresses that belong to Phoenix DIDs, so every unit stays with someone the ecosystem can recognize. It is not a general currency; the project provides no trading for it and promises nothing about its price. Its detailed rules are set out in the RING paper.</p>
+
+<h3>Two kinds of token</h3>
+<p>The word <em>token</em> is used in two senses, and the three tokens do not all fit the same one. In the broad sense, a token is a unit whose creation, use and limits are enforced by contracts on a blockchain rather than by a company's own records. All three are tokens in that sense, which is why they form one model: each is a different answer to the question of what a contract should let a unit do.</p>
+<p>In the narrow sense used by Cardano wallets, a token is a <em>native asset</em>: a separate item, identified by its own minting policy, that sits in an address and can be sent from one address to another. LAMP and RING are native assets. MAGIC is not. It exists only as a balance written into the on-chain record of each vault and tied to the identity that owns the vault. The contract that keeps that record allows MAGIC to be produced, consumed, to fade or to expire, and nothing else. There is no asset that could leave the vault, so MAGIC cannot be sent, sold or held in a wallet. A wallet that shows an asset named MAGIC is showing something else.</p>
+<p>This difference is deliberate. A unit that can move between addresses can be traded, and a unit that can be traded gets a price. Keeping MAGIC inside the vault keeps the right to use services separate from anything that could be bought and sold.</p>
+
+<p class="sub tcap">Table 1. The three tokens compared.</p>
+<div class="table-wrap">
+<table class="compare">
+  <thead><tr><th>Dimension</th><th>LAMP · base token</th><th>MAGIC · credit token</th><th>RING · anchor token</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Technical form</th><td>Cardano native asset with its own minting policy</td><td>A balance inside each vault's on-chain record; not a separate asset</td><td>Cardano native asset</td></tr>
+    <tr><th scope="row">Where it comes from</th><td>Created only under the rules of the 18 shares, straight into on-chain stores (sections 4 and 5)</td><td>Produced each epoch by LAMP placed in a vault (section 3)</td><td>Received by contributors for the resources they contribute (section 2)</td></tr>
+    <tr><th scope="row">Amount</th><td>Ceiling of 36 billion, created only as needed; never burned</td><td>No fixed total: rises with LAMP in vaults, falls as it is consumed or expires</td><td>Set by the rules of the RING paper</td></tr>
+    <tr><th scope="row">Can it move?</th><td>Yes, freely, between any Cardano addresses, like ADA</td><td>No. It is locked in the vault of the Phoenix DID that owns it</td><td>Yes, but RING is designed to move only between addresses that belong to Phoenix DIDs. How this limit is enforced is set out in the RING paper</td></tr>
+    <tr><th scope="row">Where it exists</th><td>Any Cardano wallet, as well as vaults, stores and safes</td><td>Only inside the vaults of the ecosystem; never in a wallet</td><td>Addresses that belong to Phoenix DIDs, by design</td></tr>
+    <tr><th scope="row">How long it lasts</th><td>Indefinitely; producing MAGIC does not use it up</td><td>Fades if left unused, expires after a set time, gone once consumed</td><td>Set by the rules of the RING paper</td></tr>
+    <tr><th scope="row">Value</th><td>Whatever others may pay for it; the project promises nothing about its price</td><td>No market price. What a service costs in MAGIC follows published rules and can change with demand</td><td>No trading provided by the project; nothing promised about its price</td></tr>
+    <tr><th scope="row">What it is for</th><td>Producing MAGIC; part of a voice in decisions</td><td>Consumed to use services</td><td>Recognizing those who contribute resources to the ecosystem</td></tr>
+    <tr><th scope="row">Part in governance</th><td>Two ingredients of voting power: LAMP committed and LAMP held, both capped (section 8)</td><td>One ingredient: MAGIC used, capped (section 8)</td><td>None</td></tr>
+    <tr><th scope="row">Status</th><td>Running on a test network; not yet on the main network</td><td>In development</td><td>Running on a test network; not yet on the main network</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 2 -->
+<h2 id="architecture">2. How the ecosystem is built</h2>
+
+<p>MagicLamp is organized much like a city. Three layers are built: roads and utilities at the bottom (infrastructure), public services in the middle (platforms), and the shops and homes people actually visit on top (applications). Each relies on the one below it and serves the one above. Above them stand the people and organizations the city exists for, the <strong>participants</strong>: users who consume MAGIC to use services, and contributors who supply resources and receive RING.</p>
+
+<figure>
+<svg viewBox="0 0 720 600" role="img" aria-labelledby="f2t">
+  <title id="f2t">Three built layers (applications, platforms, infrastructure) with participants above them and governance spanning all of them</title>
+  <rect x="600" y="20" width="110" height="570" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2"/>
+  <text x="655" y="290" text-anchor="middle" class="t" font-size="14" font-weight="700" fill="var(--green)">Governance</text>
+  <text x="655" y="310" text-anchor="middle" class="t m" font-size="12">MagicLamp DAO</text>
+  <text x="655" y="327" text-anchor="middle" class="t m" font-size="12">sets the rules</text>
+  <text x="655" y="344" text-anchor="middle" class="t m" font-size="12">for every layer</text>
+
+    <rect x="10" y="20" width="575" height="100" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="28" y="48" class="t" font-size="15" font-weight="700">Participants</text>
+  <text x="28" y="68" class="t m" font-size="12">who uses and who</text>
+  <text x="28" y="84" class="t m" font-size="12">builds the ecosystem</text>
+  <g class="t" font-size="12">
+    <rect x="230" y="36" width="160" height="66" rx="8" fill="var(--magic-soft)" stroke="var(--magic)"/>
+    <text x="310" y="60" text-anchor="middle" font-weight="700">Users</text>
+    <text x="310" y="78" text-anchor="middle" class="m">use services,</text>
+    <text x="310" y="93" text-anchor="middle" class="m">consume MAGIC</text>
+    <rect x="405" y="36" width="160" height="66" rx="8" fill="var(--ring-soft)" stroke="var(--ring)"/>
+    <text x="485" y="60" text-anchor="middle" font-weight="700">Contributors</text>
+    <text x="485" y="78" text-anchor="middle" class="m">contribute resources,</text>
+    <text x="485" y="93" text-anchor="middle" class="m">receive RING</text>
+  </g>
+
+  <rect x="10" y="140" width="575" height="100" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="28" y="168" class="t" font-size="15" font-weight="700">Applications</text>
+  <text x="28" y="188" class="t m" font-size="12">what people use</text>
+  <text x="28" y="204" class="t m" font-size="12">day to day</text>
+  <g class="t" font-size="12">
+    <rect x="230" y="158" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="282" y="192" text-anchor="middle" font-weight="600">Aladin</text>
+    <rect x="345" y="158" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="397" y="192" text-anchor="middle" font-weight="600">CheckFarm</text>
+    <rect x="460" y="158" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="512" y="184" text-anchor="middle">Community</text><text x="512" y="200" text-anchor="middle">apps</text>
+  </g>
+
+  <rect x="10" y="260" width="575" height="160" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="28" y="288" class="t" font-size="15" font-weight="700">Platforms</text>
+  <text x="28" y="308" class="t m" font-size="12">shared services</text>
+  <text x="28" y="324" class="t m" font-size="12">apps are built on</text>
+  <g class="t" font-size="12">
+    <rect x="230" y="276" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="282" y="302" text-anchor="middle" font-weight="600">AladinWork</text><text x="282" y="318" text-anchor="middle" class="m">work</text>
+    <rect x="345" y="276" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="397" y="302" text-anchor="middle" font-weight="600">OriLife</text><text x="397" y="318" text-anchor="middle" class="m">traceability</text>
+    <rect x="460" y="276" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="512" y="302" text-anchor="middle" font-weight="600">ProofChat</text><text x="512" y="318" text-anchor="middle" class="m">communication</text>
+    <rect x="230" y="344" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="282" y="370" text-anchor="middle" font-weight="600">AffiSo</text><text x="282" y="386" text-anchor="middle" class="m">affiliate</text>
+    <rect x="345" y="344" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="397" y="370" text-anchor="middle" font-weight="600">SuperApp</text><text x="397" y="386" text-anchor="middle" class="m">app builder</text>
+    <rect x="460" y="344" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="512" y="370" text-anchor="middle" font-weight="600">TigerAgent</text><text x="512" y="386" text-anchor="middle" class="m">AI agents</text>
+  </g>
+
+  <rect x="10" y="440" width="575" height="150" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="28" y="468" class="t" font-size="15" font-weight="700">Infrastructure</text>
+  <text x="28" y="488" class="t m" font-size="12">the foundation,</text>
+  <text x="28" y="504" class="t m" font-size="12">on the Cardano blockchain</text>
+  <g class="t" font-size="12">
+    <rect x="230" y="456" width="335" height="44" rx="8" fill="var(--lamp-soft)" stroke="var(--lamp)"/>
+    <text x="397" y="483" text-anchor="middle" font-weight="600">Token contracts: LAMP · MAGIC · RING</text>
+    <rect x="230" y="514" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="282" y="540" text-anchor="middle" font-weight="600">Phoenix</text><text x="282" y="556" text-anchor="middle" class="m">identity</text>
+    <rect x="345" y="514" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="397" y="540" text-anchor="middle" font-weight="600">LampNet</text><text x="397" y="556" text-anchor="middle" class="m">DePIN</text>
+    <rect x="460" y="514" width="105" height="58" rx="8" fill="var(--bg)" stroke="var(--line)"/>
+    <text x="512" y="540" text-anchor="middle" font-weight="600">VeData</text><text x="512" y="556" text-anchor="middle" class="m">oracle</text>
+  </g>
+</svg>
+<figcaption>Figure 2. Participants reach the ecosystem through its applications, which rest on platforms and infrastructure. Governance is not a layer of its own: it sets the rules for all of them.</figcaption>
+</figure>
+
+<h3>Infrastructure</h3>
+<p>Infrastructure is what every other part relies on and what no one uses for its own sake. It runs on the Cardano blockchain, which records every transfer publicly and cannot be quietly rewritten, and it has four parts.</p>
+<ul>
+  <li><strong>Token contracts</strong> create LAMP within its ceiling, keep the MAGIC balance of every vault, and issue RING.</li>
+  <li><strong>Phoenix Identity</strong>, provided by PhoenixKey, gives each person, company or service one verified digital identity (a DID) whose keys belong to its owner.</li>
+  <li><strong>LampNet DePIN</strong> is a network of devices: people lend spare computing power, storage and bandwidth to it, receive RING for what is measured, and are also recognized through the Join LampNet share (section 5).</li>
+  <li><strong>VeData Oracle</strong> collects data from the real world, classifies it and anchors it on Cardano, so that contracts and applications can rely on it.</li>
+</ul>
+
+<h3>Platforms</h3>
+<p>A platform is a shared service that applications are built on, rather than a product people open for its own sake. Each platform has its own DID and shares in LAMP according to how much the ecosystem actually uses it.</p>
+<ul>
+  <li><strong>AladinWork</strong>: work and jobs.</li>
+  <li><strong>OriLife</strong>: traceability, recording where a product comes from and what has happened to it.</li>
+  <li><strong>ProofChat</strong>: communication.</li>
+  <li><strong>AffiSo</strong>: affiliate and referral.</li>
+  <li><strong>SuperApp</strong>: an app builder. A new app is a set of settings on one shared code base rather than a new program.</li>
+  <li><strong>TigerAgent</strong>: AI agents designed to run on LampNet.</li>
+</ul>
+
+<h3>Applications</h3>
+<p>The application layer is where the ecosystem meets people, and its role is the <strong>user experience</strong>. An application turns the services of one or more platforms into screens, steps and plain language that a person can follow, and it keeps out of sight what people should not have to handle themselves, such as keys, network fees and contracts. Users consume MAGIC through applications, and contributors offer their resources through them. <strong>Aladin</strong> and <strong>CheckFarm</strong> are two applications, and anyone in the community can build more, as long as each relies on at least one platform. Applications share in LAMP according to real use. A team that offers both a platform and an application registers them separately, so the two are never counted twice.</p>
+
+<p class="sub tcap">Table 2. How the three built layers differ.</p>
+<div class="table-wrap">
+<table class="compare">
+  <thead><tr><th>Property</th><th>Infrastructure</th><th>Platforms</th><th>Applications</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">What it is</th><td>Shared rules and records</td><td>Shared services</td><td>The user experience</td></tr>
+    <tr><th scope="row">Used directly by</th><td>Platforms and applications</td><td>Applications, and the teams that build them</td><td>People</td></tr>
+    <tr><th scope="row">Built on</th><td>Cardano</td><td>Infrastructure</td><td>At least one platform</td></tr>
+    <tr><th scope="row">Share of LAMP</th><td>Dedicated shares, such as fee cover (8) and Join LampNet (16)</td><td>Platform share (4), by measured use</td><td>App share (5), by measured use</td></tr>
+    <tr><th scope="row">Examples</th><td>Token contracts, Phoenix, LampNet, VeData</td><td>AladinWork, OriLife, ProofChat, AffiSo, SuperApp, TigerAgent</td><td>Aladin, CheckFarm, community apps</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Participants: users and contributors</h3>
+<p>Participants are not something the ecosystem builds; they are who it is built for. Each participant, whether a person or an organization, takes part through its own Phoenix DID, and the same participant can play both roles.</p>
+<ul>
+  <li><strong>Users</strong> are the people and organizations that use the ecosystem's services. They consume MAGIC, which the LAMP in their own vault produces (section 3).</li>
+  <li><strong>Contributors</strong> are the people and organizations that supply the resources the ecosystem needs in order to grow. They receive RING as recognition of what they contribute.</li>
+</ul>
+
+<p>Resources fall into six groups. Each is contributed through a particular part of the ecosystem, which also measures or confirms that the contribution really happened.</p>
+
+<p class="sub tcap">Table 3. What contributors can offer, and how.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Resource group</th><th>Examples</th><th>How it is contributed and confirmed</th><th>Through</th></tr></thead>
+  <tbody>
+    <tr><td>Physical devices</td><td>Desktop and laptop computers, servers and phones: their processing power (CPU and GPU), disk storage and network bandwidth</td><td>Joining LampNet with the device. The network places it in one of four tiers (core, edge, mobile, short-lived) from its measured hardware, and meters the storage and bandwidth it actually serves. A computer with enough memory can also run AI models for TigerAgent</td><td>LampNet DePIN, TigerAgent</td></tr>
+    <tr><td>Work skills</td><td>Programming, graphic and video design, repairing a refrigerator or an air conditioner, driving, transport, construction, housekeeping, tutoring, farm work, events, beauty care, marketing</td><td>Taking a job of a published job type. The contributor submits evidence of the work; the person or business that requested it confirms completion or opens a dispute, and each side rates the other</td><td>AladinWork</td></tr>
+    <tr><td>Expert knowledge</td><td>Professional know-how in medicine, law, engineering, software, teaching, agriculture and other fields</td><td>Consultations, lessons and reviews booked as jobs, for example a medical consultation or a course in software development</td><td>AladinWork</td></tr>
+    <tr><td>Data</td><td>Records of animals, crops and fruit; farm and harvest records; where a product comes from; readings from devices</td><td>Submitting records with their evidence. VeData rates the quality of the evidence and how far the record can be trusted, classifies it and anchors it on Cardano</td><td>VeData Oracle, OriLife, CheckFarm</td></tr>
+    <tr><td>Network and reputation</td><td>A personal network, standing in a community</td><td>Bringing in new participants through a personal referral link tied to one's Phoenix DID; the referrer receives RING for each newcomer who qualifies under published conditions</td><td>AffiSo</td></tr>
+    <tr><td>Software and content</td><td>Program code, application settings, templates, articles and videos</td><td>Building applications on SuperApp; contributing code, which is accepted only once reviewed and merged; preparing content and channel settings for the publishing agents of TigerAgent</td><td>SuperApp, AladinWork, TigerAgent</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Three rules apply to every group. A contribution is tied to the contributor's Phoenix DID. It counts only once it has been measured or confirmed by the part of the ecosystem it went through, never on the contributor's own word. And the amount of RING received for it follows the rules of the RING paper. Some contributions are also recognized with LAMP from the shares in section 5, such as Join LampNet for devices.</p>
+
+<p>Data means data the contributor has the right to share. RING is never given in exchange for personal data, and personal data is used only with the person's consent and for the purpose stated. RING is not payment for work under any employment or service contract, and it carries no promise of monetary value. Anyone who receives RING is responsible for their own tax position.</p>
+
+<!-- 3 -->
+<h2 id="magic">3. From LAMP to MAGIC</h2>
+
+<p>Every participant in MagicLamp, whether a person, a company or a service, is known by a <strong>DID</strong>, a digital identity whose keys belong to its owner rather than to a platform. Each DID can have a <strong>vault</strong> for LAMP.</p>
+
+<p>LAMP placed in a vault produces a little MAGIC every <strong>epoch</strong>, Cardano's natural rhythm of about five days. Producing MAGIC does not use the LAMP up, and the owner can take it out of the vault at any time; from then on it simply stops producing MAGIC. The same LAMP sitting in an ordinary wallet produces nothing. The reason is simple: the MAGIC that services consume should come from participants who can be recognized, not from anonymous balances.</p>
+
+<figure>
+<svg viewBox="0 0 720 200" role="img" aria-labelledby="f3t">
+  <title id="f3t">LAMP in a vault produces MAGIC each epoch; MAGIC is consumed by services</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <rect x="10" y="30" width="150" height="70" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="85" y="60" text-anchor="middle" class="t" font-size="15" font-weight="600">Ordinary wallet</text>
+  <text x="85" y="82" text-anchor="middle" class="t m" font-size="13">produces nothing</text>
+  <line x1="162" y1="65" x2="220" y2="65" stroke="var(--muted)" stroke-width="2" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="190" y="55" text-anchor="middle" class="t m" font-size="11">in or out</text>
+  <rect x="225" y="20" width="200" height="90" rx="12" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+  <text x="325" y="55" text-anchor="middle" class="t" font-size="15" font-weight="600">Vault of a DID</text>
+  <text x="325" y="78" text-anchor="middle" class="t" font-size="13">LAMP kept here</text>
+  <text x="325" y="97" text-anchor="middle" class="t m" font-size="12">person · company · service</text>
+  <line x1="425" y1="65" x2="490" y2="65" stroke="var(--magic)" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="457" y="55" text-anchor="middle" class="t m" font-size="11">every epoch</text>
+  <rect x="495" y="30" width="100" height="70" rx="10" fill="var(--magic-soft)" stroke="var(--magic)" stroke-width="2"/>
+  <text x="545" y="70" text-anchor="middle" class="t" font-size="16" font-weight="700" fill="var(--magic)">MAGIC</text>
+  <line x1="595" y1="65" x2="640" y2="65" stroke="var(--magic)" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="645" y="30" width="68" height="70" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+  <text x="679" y="62" text-anchor="middle" class="t" font-size="12" font-weight="600">Services</text>
+  <text x="679" y="80" text-anchor="middle" class="t m" font-size="11">consumed</text>
+  <path d="M545 100 L 545 165" stroke="var(--muted)" stroke-width="1.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+  <text x="545" y="185" text-anchor="middle" class="t m" font-size="12">unused MAGIC slowly fades</text>
+</svg>
+<figcaption>Figure 3. The LAMP in a vault is not used up, and its owner can move it in or out at any time; only the MAGIC it produces is consumed. MAGIC will start once official LAMP exists.</figcaption>
+</figure>
+
+<p>Two other kinds of container hold LAMP but produce no MAGIC. A <strong>store</strong> holds LAMP that has not been handed out yet. A <strong>safe</strong> holds LAMP for one person, or for one list of recipients, under its own rules. The single exception is the Wakeme safe (section 6): it belongs to one person's DID, so its LAMP produces MAGIC as in a vault, but unlike a vault it cannot be taken out until its 1001 days have passed.</p>
+
+<!-- 4 -->
+<h2 id="supply">4. A ceiling, not a stockpile</h2>
+
+<p>There will never be more than <strong>36,000,000,000 LAMP</strong>. That number is a ceiling, not a pile created on day one. LAMP comes into existence only when it is due to be handed out, following a published schedule; until then it simply does not exist. A block explorer will therefore show far fewer than 36 billion LAMP for a long time. That is intended.</p>
+
+<figure>
+<svg viewBox="0 0 720 210" role="img" aria-labelledby="f4t">
+  <title id="f4t">The amount of LAMP created grows gradually toward the 36 billion ceiling</title>
+  <line x1="60" y1="40" x2="690" y2="40" stroke="var(--no)" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="690" y="30" text-anchor="end" class="t" font-size="13" font-weight="600" fill="var(--no)">Ceiling: 36 billion, can never be exceeded</text>
+  <line x1="60" y1="170" x2="690" y2="170" stroke="var(--line)" stroke-width="2"/>
+  <line x1="60" y1="40" x2="60" y2="170" stroke="var(--line)" stroke-width="2"/>
+  <text x="375" y="196" text-anchor="middle" class="t m" font-size="12">time, following the published schedule</text>
+  <path d="M60 168 L 140 164 L 220 156 L 300 144 L 380 130 L 460 116 L 540 104 L 620 95 L 690 89 L 690 170 L 60 170 Z" fill="var(--lamp-soft)" opacity=".7"/>
+  <path d="M60 168 L 140 164 L 220 156 L 300 144 L 380 130 L 460 116 L 540 104 L 620 95 L 690 89" fill="none" stroke="var(--lamp)" stroke-width="3"/>
+  <text x="430" y="152" text-anchor="middle" class="t" font-size="13">LAMP created so far</text>
+  <text x="100" y="66" class="t m" font-size="12">not created yet, so it does not exist</text>
+</svg>
+<figcaption>Figure 4. An illustration of the shape only. The real pace follows each share's own schedule.</figcaption>
+</figure>
+
+<p>Four promises are written into the contracts themselves, not just into this paper:</p>
+<ul>
+  <li><strong>The ceiling cannot be raised.</strong> Every token on Cardano is defined by a rule set called a <em>policy</em>. LAMP's policy keeps a running count that can only go up and refuses anything beyond 36 billion. Raising the ceiling would mean creating a different token.</li>
+  <li><strong>Nothing is destroyed.</strong> LAMP is never burned. Whatever goes unclaimed returns to the <strong>Treasury</strong>, a shared account, where it is recorded rather than erased.</li>
+  <li><strong>New LAMP is always held first.</strong> Freshly created LAMP lands in a store with its own rules, never directly in someone's wallet.</li>
+  <li><strong>Every amount is exact.</strong> LAMP is counted in whole millionths, so no rounding errors can creep in.</li>
+</ul>
+<p>Because official LAMP does not exist yet, these promises can be read in the code but not yet observed on the live network.</p>
+
+<!-- 5 -->
+<h2 id="allocation">5. How the 36 billion are shared</h2>
+
+<p>The ceiling is divided into 18 <strong>shares</strong>, each set aside for one purpose. About 26.37 billion LAMP are meant to be handed out over time. The remaining 9.63 billion form a <strong>Reserve</strong>, a safety buffer that releases only a small, fixed amount, and only when the Treasury runs low.</p>
+
+<figure>
+<svg viewBox="0 0 720 280" role="img" aria-labelledby="f5t">
+  <title id="f5t">Share of the 36 billion LAMP by how it is released</title>
+  <g transform="translate(40,30)">
+    <rect x="0" y="0" width="409" height="46" fill="var(--lamp)"/>
+    <rect x="409" y="0" width="171" height="46" fill="var(--muted)"/>
+    <rect x="580" y="0" width="33" height="46" fill="var(--magic)"/>
+    <rect x="613" y="0" width="18" height="46" fill="var(--ring)"/>
+    <rect x="631" y="0" width="9" height="46" fill="var(--green)"/>
+    <rect x="0" y="0" width="640" height="46" fill="none" stroke="var(--line)"/>
+  </g>
+  <g class="t" font-size="14">
+    <rect x="40" y="100" width="14" height="14" fill="var(--lamp)"/>
+    <text x="62" y="112">Released a little at a time (10 shares): 23.00 billion</text>
+    <rect x="40" y="126" width="14" height="14" fill="var(--muted)"/>
+    <text x="62" y="138">Reserve, the safety buffer: 9.63 billion</text>
+    <rect x="40" y="152" width="14" height="14" fill="var(--magic)"/>
+    <text x="62" y="164">Treasury and Liquidity: 1.85 billion</text>
+    <rect x="40" y="178" width="14" height="14" fill="var(--ring)"/>
+    <text x="62" y="190">Wakeme personal safes: 1.00 billion</text>
+    <rect x="40" y="204" width="14" height="14" fill="var(--green)"/>
+    <text x="62" y="216">From a published list (Airdrop, SRCL, ETD): 0.49 billion</text>
+    <text x="40" y="250" class="m" font-size="12">RedBack (0.02 billion, set aside for the RING design) is too small to show at this scale.</text>
+  </g>
+</svg>
+<figcaption>Figure 5. Most LAMP is released slowly, epoch after epoch, never faster than a fixed limit.</figcaption>
+</figure>
+
+<p>The full list follows. The amounts add up to exactly 36,000,000,000; percentages are rounded.</p>
+
+<p class="sub tcap">Table 4. The 18 shares of LAMP.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th class="num">#</th><th>Share</th><th class="num">LAMP</th><th class="num">%</th><th>What it is for</th></tr></thead>
+  <tbody>
+    <tr><td class="num">1</td><td>Reserve</td><td class="num">9,630,000,000</td><td class="num">26.75</td><td>Safety buffer; releases at most 9,630,000 LAMP per epoch, and only when the Treasury is low</td></tr>
+    <tr><td class="num">2</td><td>Treasury</td><td class="num">964,000,000</td><td class="num">2.68</td><td>Shared account that receives unclaimed and leftover LAMP</td></tr>
+    <tr><td class="num">3</td><td>Development</td><td class="num">2,718,000,000</td><td class="num">7.55</td><td>Shared fund for research and new technology; spending to be decided by the DAO</td></tr>
+    <tr><td class="num">4</td><td>Platform</td><td class="num">3,141,000,000</td><td class="num">8.73</td><td>Platforms, according to how much they are actually used</td></tr>
+    <tr><td class="num">5</td><td>App</td><td class="num">1,618,000,000</td><td class="num">4.49</td><td>Community applications, according to how much they are actually used</td></tr>
+    <tr><td class="num">6</td><td>Wakeme</td><td class="num">1,001,000,000</td><td class="num">2.78</td><td>Personal safes of up to 1001 LAMP for using services</td></tr>
+    <tr><td class="num">7</td><td>Referrer</td><td class="num">343,000,000</td><td class="num">0.95</td><td>People who bring in new users</td></tr>
+    <tr><td class="num">8</td><td>PhoenixKey (fee cover)</td><td class="num">142,857,000</td><td class="num">0.40</td><td>Paying network fees on behalf of users</td></tr>
+    <tr><td class="num">9</td><td>MagicLamp Capital</td><td class="num">1,296,000,000</td><td class="num">3.60</td><td>Share of the initial issuer, never to be sold (section 7)</td></tr>
+    <tr><td class="num">10</td><td>Aladin Contract</td><td class="num">6,000,000,000</td><td class="num">16.67</td><td>Allocation to Aladin Contract, which builds the system and its applications (section 7)</td></tr>
+    <tr><td class="num">11</td><td>GreenSun Tech</td><td class="num">6,000,000,000</td><td class="num">16.67</td><td>Allocation to GreenSun Tech, which researches and designs it (section 7)</td></tr>
+    <tr><td class="num">12</td><td>Partnership</td><td class="num">284,000,000</td><td class="num">0.79</td><td>Strategic partners, by agreement</td></tr>
+    <tr><td class="num">13</td><td>ETD</td><td class="num">12,000,000</td><td class="num">0.03</td><td>Early supporters of the TIGER stake pool; the first live run of the system</td></tr>
+    <tr><td class="num">14</td><td>Airdrop</td><td class="num">120,000,000</td><td class="num">0.33</td><td>Supporters of the Cardano network; gathers a community to govern</td></tr>
+    <tr><td class="num">15</td><td>SRCL</td><td class="num">360,000,000</td><td class="num">1.00</td><td>Supporters who route staking rewards to cover users' fees (not open)</td></tr>
+    <tr><td class="num">16</td><td>Join LampNet</td><td class="num">1,461,000,000</td><td class="num">4.06</td><td>People who share computing power, storage and bandwidth</td></tr>
+    <tr><td class="num">17</td><td>RedBack</td><td class="num">21,143,000</td><td class="num">0.06</td><td>Set aside for the RING design; nobody holds a key to it</td></tr>
+    <tr><td class="num">18</td><td>Liquidity</td><td class="num">888,000,000</td><td class="num">2.47</td><td>Placeholder only; there is no plan for it yet</td></tr>
+    <tr><th></th><th>Total</th><th class="num">36,000,000,000</th><th class="num">100</th><th></th></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The shares of the three companies (rows 9 to 11) are released at the same slow pace as the community shares, with no faster or separate way out. The contracts do not enforce the table itself (section 11), which is why every transfer is public.</p>
+
+<!-- 6 -->
+<h2 id="receive">6. How people receive LAMP</h2>
+
+<p>LAMP is never sold for money: there is no ICO and no presale. Every share hands out LAMP according to a public formula or condition. The only exception, SRCL, is described below and is not open. What people do with their LAMP afterwards is their own affair.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" role="img" aria-labelledby="f6t">
+  <title id="f6t">From the store, LAMP reaches people by four routes</title>
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <rect x="10" y="95" width="170" height="70" rx="12" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+  <text x="95" y="125" text-anchor="middle" class="t" font-size="15" font-weight="600">Store</text>
+  <text x="95" y="146" text-anchor="middle" class="t m" font-size="12">newly created LAMP</text>
+  <g stroke="var(--muted)" stroke-width="2" fill="none">
+    <path d="M180 130 C 230 130, 230 35, 280 35" marker-end="url(#arr2)"/>
+    <path d="M180 130 C 230 130, 230 98, 280 98" marker-end="url(#arr2)"/>
+    <path d="M180 130 C 230 130, 230 162, 280 162" marker-end="url(#arr2)"/>
+    <path d="M180 130 C 230 130, 230 225, 280 225" marker-end="url(#arr2)"/>
+  </g>
+  <g class="t" font-size="13">
+    <rect x="285" y="12" width="425" height="46" rx="8" fill="var(--card)" stroke="var(--line)"/>
+    <text x="298" y="32" font-weight="600">A little at a time</text>
+    <text x="298" y="50" class="m" font-size="12">each epoch, within a limit: platforms, apps, companies, partners</text>
+    <rect x="285" y="75" width="425" height="46" rx="8" fill="var(--card)" stroke="var(--line)"/>
+    <text x="298" y="95" font-weight="600">Wakeme safe</text>
+    <text x="298" y="113" class="m" font-size="12">use opens up day by day; nothing reaches a wallet for 1001 days</text>
+    <rect x="285" y="139" width="425" height="46" rx="8" fill="var(--card)" stroke="var(--line)"/>
+    <text x="298" y="159" font-weight="600">Published list (Airdrop, SRCL)</text>
+    <text x="298" y="177" class="m" font-size="12">register, the list is fixed, each person claims their part</text>
+    <rect x="285" y="202" width="425" height="46" rx="8" fill="var(--card)" stroke="var(--line)"/>
+    <text x="298" y="222" font-weight="600">Scheduled release (ETD)</text>
+    <text x="298" y="240" class="m" font-size="12">sent straight to the recipient's wallet, epoch by epoch</text>
+  </g>
+</svg>
+<figcaption>Figure 6. Four routes out of the store. Every transfer is public and can be checked against the table in section 5.</figcaption>
+</figure>
+
+<h3>A little at a time</h3>
+<p>Ten shares release LAMP gradually, epoch after epoch, never faster than a set limit. If a limit goes unused it carries over rather than being lost. A committee may adjust the pace, but only within bounds written into the contract, and any change is visible to everyone.</p>
+
+<h3>Wakeme</h3>
+<p>Wakeme gives each person one personal safe of up to 1001 LAMP for using services. It is not a loan: there is no debt, no interest and no lender. Over 1001 days, the safe lets its owner <em>use</em> one more LAMP each day inside the ecosystem, without handing that LAMP over. Only after the 1001 days, and only for someone whose identity has been verified, can LAMP leave the safe for a wallet of their choice, in step with how much MAGIC they have used. A safe that stays idle for a long time is closed and its LAMP goes back to the shared pool.</p>
+
+<h3>Airdrop</h3>
+<p>The Airdrop thanks people who help keep Cardano secure by delegating their ADA, along with the operators of stake pools. Its deeper purpose is to bring together a community willing to take part in governance. Participants register in advance and need more than 1,000 ADA. Once the list is fixed, each person claims their part with a short proof that they are on it, without the whole list ever being published. Claiming costs the recipient nothing.</p>
+
+<h3>ETD</h3>
+<p>ETD (Early TIGER Delegated) thanks the early supporters of the TIGER stake pool. It is planned to run first, as a real-world test of the whole system on Cardano's main network. The list was fixed by the last snapshot taken before midnight UTC on 18 June 2026. Once it runs, LAMP is released gradually, straight into each person's wallet.</p>
+
+<h3>SRCL, the one exception, not open</h3>
+<p>SRCL would let someone direct their ADA staking rewards (never their savings, which stay in their own wallet) toward paying other users' network fees, receiving LAMP in return by a public formula. Because those rewards have value, this is an exchange, and this paper says so plainly. SRCL stays closed until MagicLamp DAO exists and three seats are filled. <strong>No SRCL address has been published. Do not send ADA to anyone claiming to collect it for SRCL.</strong></p>
+
+<!-- 7 -->
+<h2 id="roles">7. Who does what</h2>
+
+<p>Four bodies have a part in MagicLamp. MagicLamp Capital, now being established, is to issue the token, GreenSun Tech researches and designs it, Aladin Contract builds it, and MagicLamp Foundation, formed by the community, is to run the ecosystem in the future as a DAO.</p>
+
+<figure>
+<svg viewBox="0 0 720 330" role="img" aria-labelledby="f7t">
+  <title id="f7t">The issuer being established and the development companies now; MagicLamp Foundation, run as a DAO, in the future</title>
+  <defs>
+    <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <text x="180" y="24" text-anchor="middle" class="t m" font-size="13" font-weight="600">TODAY: issue, design, build</text>
+  <text x="555" y="24" text-anchor="middle" class="t m" font-size="13" font-weight="600">FUTURE: run by the community</text>
+
+  <g class="t">
+    <rect x="10" y="40" width="340" height="74" rx="10" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+    <text x="24" y="64" font-size="14" font-weight="700">MagicLamp Capital</text>
+    <text x="24" y="84" font-size="12" class="m">initial issuer of LAMP</text>
+    <text x="24" y="101" font-size="12" class="m">launches it on the main network</text>
+
+    <rect x="10" y="126" width="340" height="74" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="24" y="150" font-size="14" font-weight="700">GreenSun Tech</text>
+    <text x="24" y="170" font-size="12" class="m">research and design</text>
+    <text x="24" y="187" font-size="12" class="m">token model, contracts, specifications</text>
+
+    <rect x="10" y="212" width="340" height="74" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="24" y="236" font-size="14" font-weight="700">Aladin Contract</text>
+    <text x="24" y="256" font-size="12" class="m">builds the system</text>
+    <text x="24" y="273" font-size="12" class="m">and develops applications</text>
+  </g>
+
+  <path d="M355 163 L 395 163" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#arr4)"/>
+
+  <g class="t">
+    <rect x="400" y="40" width="310" height="246" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="414" y="66" font-size="14" font-weight="700">MagicLamp Foundation</text>
+    <text x="414" y="88" font-size="12" class="m">formed by the community</text>
+    <text x="414" y="106" font-size="12" class="m">runs the ecosystem as a DAO</text>
+    <text x="414" y="138" font-size="13" font-weight="600">MagicLamp DAO</text>
+    <text x="414" y="158" font-size="12" class="m">one verified person, one voter</text>
+    <text x="414" y="176" font-size="12" class="m">decides on the Treasury and the rules</text>
+    <text x="414" y="208" font-size="13" font-weight="600">At least 21 seats</text>
+    <text x="414" y="228" font-size="12" class="m">community members and partners,</text>
+    <text x="414" y="246" font-size="12" class="m">plus at most one seat for each</text>
+    <text x="414" y="264" font-size="12" class="m">of the three companies</text>
+  </g>
+  <text x="360" y="318" text-anchor="middle" class="t m" font-size="12">Dashed outline: being formed by the community.</text>
+</svg>
+<figcaption>Figure 7. MagicLamp Capital, now being established, is to issue LAMP; GreenSun Tech designs it and Aladin Contract builds it; MagicLamp Foundation is to run it in the future. The conditions for that handover are published before it happens.</figcaption>
+</figure>
+
+<h3>MagicLamp Capital</h3>
+<p>MagicLamp Capital is a company being established outside Vietnam to be the initial issuer of LAMP. Once established, it launches official LAMP on the main network and publishes its policy ID (section 9). The key that does this will be controlled by MagicLamp Capital under a board resolution; who may sign will be set and changed only by resolution, and each change will be published. MagicLamp Capital is to hold share 9 (1.296 billion LAMP, 3.6%), released at the same slow pace as the community's, and is to commit never to sell that LAMP. Proof of its formation and of that commitment will be published at magiclamp.eco.</p>
+
+<h3>GreenSun Tech</h3>
+<p>GreenSun Tech is the research and design company. It works out the token model, the governance rules and the contract specifications. GreenSun Tech holds share 11, one sixth of the ceiling (6 billion LAMP), released at the same slow pace as everyone else.</p>
+
+<h3>Aladin Contract</h3>
+<p>Aladin Contract is the building company. It writes and tests the open-source code that runs MagicLamp and develops applications on it, including Aladin. It holds share 10, also 6 billion LAMP, released at the same slow pace.</p>
+<p>Both GreenSun Tech and Aladin Contract are Vietnamese companies. Neither holds the key that launches the token, and neither signs the contracts that create, hand out, sell or exchange tokens on the main network.</p>
+
+<h3>MagicLamp Foundation</h3>
+<p>MagicLamp Foundation is the organization the community forms to run the ecosystem in the future. It looks after the people who use the ecosystem and helps their number grow, and it makes decisions as a DAO, <strong>MagicLamp DAO</strong>: the community voting under published rules, one verified person per voter (section 8). Once it is operating, it decides how the Treasury and the Development fund are used and adjusts the governance settings. Until then, committees act within limits written into the contracts, and every action they take is public.</p>
+<p>The Foundation widens its circle step by step, bringing in partners and members of the community, and also the three companies, until it has at least 21 seats. The companies' place in it is limited on purpose:</p>
+<ul>
+  <li>At most 3 seats, one per company, however many seats there are. Under the voting rules in section 8 no voter counts for more than one twenty-first, so 3 voters can neither block nor carry a decision.</li>
+  <li>No veto, no chair and no permanent seat.</li>
+  <li>A time limit: these seats end after a fixed number of epochs and are then filled by election like any other.</li>
+  <li>The two Vietnamese companies take no part in votes on creating, selling or exchanging tokens or on spending from shared funds.</li>
+</ul>
+<p>The Foundation is not a share and receives no share of LAMP of its own.</p>
+
+<!-- 8 -->
+<h2 id="governance">8. How decisions are made</h2>
+
+<p>In many token projects one token means one vote, so whoever owns the most decides. MagicLamp counts <strong>people</strong> instead. Every voter is an individual verified through <strong>Phoenix Identity</strong>, an identity system based on biometrics, so that nobody can multiply their voice by opening more wallets.</p>
+
+<p>A person's weight in a vote comes from four ingredients, <em>multiplied</em> together, each with its own upper limit:</p>
+
+<figure>
+<svg viewBox="0 0 720 210" role="img" aria-labelledby="f8t">
+  <title id="f8t">Voting weight is the product of four capped factors</title>
+  <g class="t" text-anchor="middle">
+    <rect x="10" y="40" width="140" height="90" rx="12" fill="var(--magic-soft)" stroke="var(--magic)" stroke-width="2"/>
+    <text x="80" y="78" font-size="14" font-weight="600">MAGIC</text>
+    <text x="80" y="98" font-size="14" font-weight="600">used</text>
+    <text x="167" y="95" font-size="26" class="m">×</text>
+    <rect x="185" y="40" width="140" height="90" rx="12" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+    <text x="255" y="78" font-size="14" font-weight="600">LAMP</text>
+    <text x="255" y="98" font-size="14" font-weight="600">committed</text>
+    <text x="342" y="95" font-size="26" class="m">×</text>
+    <rect x="360" y="40" width="140" height="90" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="430" y="88" font-size="14" font-weight="600">Reputation</text>
+    <text x="517" y="95" font-size="26" class="m">×</text>
+    <rect x="535" y="40" width="175" height="90" rx="12" fill="var(--lamp-soft)" stroke="var(--lamp)" stroke-width="2"/>
+    <text x="622" y="78" font-size="14" font-weight="600">LAMP held</text>
+    <text x="622" y="98" font-size="12" class="m">counted up to 100 million</text>
+    <g fill="var(--no)" font-size="11">
+      <text x="80" y="26">limit</text><text x="255" y="26">limit</text><text x="430" y="26">limit</text><text x="622" y="26">limit</text>
+    </g>
+    <text x="360" y="170" font-size="14">If any ingredient is zero, the vote carries no weight.</text>
+    <text x="360" y="192" font-size="13" class="m">Owning more LAMP raises only one ingredient, and only up to its limit.</text>
+  </g>
+</svg>
+<figcaption>Figure 8. A large holder cannot outvote many active members on the strength of a balance alone.</figcaption>
+</figure>
+
+<h3>The formula</h3>
+<p>Write <em>C</em><sub>1</sub> to <em>C</em><sub>4</sub> for the four ingredients of one voter, <em>cap</em> for the upper limit of each and <em>w</em> for its weight. Each ingredient is first cut down to its limit, then raised to its weight, and the four results are multiplied:</p>
+<div class="table-wrap"><p style="text-align:center;font-size:1.05rem;white-space:nowrap">VP = min(<em>C</em><sub>1</sub>, cap<sub>1</sub>)<sup><em>w</em>1</sup> × min(<em>C</em><sub>2</sub>, cap<sub>2</sub>)<sup><em>w</em>2</sup> × min(<em>C</em><sub>3</sub>, cap<sub>3</sub>)<sup><em>w</em>3</sup> × min(<em>C</em><sub>4</sub>, cap<sub>4</sub>)<sup><em>w</em>4</sup></p></div>
+<p class="sub tcap">Table 5. The four ingredients of voting power.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Ingredient</th><th>What is measured</th><th>Limit</th></tr></thead>
+  <tbody>
+    <tr><td><em>C</em><sub>1</sub> MAGIC used</td><td>MAGIC the person has actually consumed over roughly the last 18 epochs</td><td>set by the DAO</td></tr>
+    <tr><td><em>C</em><sub>2</sub> LAMP committed</td><td>LAMP the person has chosen to commit for roughly the next 24 epochs; it cannot be withdrawn until the commitment ends</td><td>set by the DAO</td></tr>
+    <tr><td><em>C</em><sub>3</sub> Reputation</td><td>standing earned in the community; the measure is not published yet</td><td>set by the DAO</td></tr>
+    <tr><td><em>C</em><sub>4</sub> LAMP held</td><td>LAMP the person holds today</td><td>100 million LAMP</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Multiplying rather than adding is deliberate. With a sum, a wealthy voter could reach the top of the two LAMP ingredients and still score high with no reputation at all. With a product, a weak ingredient pulls the whole result down.</p>
+<p>A second rule sits on top. No single voter may count for more than one twenty-first of all voting power, about 4.8%:</p>
+<div class="table-wrap"><p style="text-align:center;font-size:1.05rem;white-space:nowrap">counted VP = min(VP, total VP ÷ 21)</p></div>
+<p>So at least 8 independent voters are needed to hold more than a third of the vote, and at least 14 to reach two thirds. The number 21 is a starting floor, not a fixed council. As more people take part, the limit stops being reached and matters less.</p>
+<p>Consuming MAGIC is not proof of genuine engagement on its own. Because MAGIC can be produced from LAMP, influence through <em>C</em><sub>1</sub> can be bought indirectly. The limit on <em>C</em><sub>1</sub> keeps that price high and finite, but it does not rule it out.</p>
+
+<p>The DAO can adjust the limits and weights of these ingredients.</p>
+
+<h3>What the design does not solve yet</h3>
+<ul>
+  <li><strong>Spreading LAMP across people.</strong> Because LAMP moves freely, an organization could spread its LAMP across the vaults of its own members. To use 6 billion LAMP this way it would need about 60 different identities, each with its own MAGIC use, commitment and reputation. "One person, one identity" is an assumption that nothing on the blockchain enforces yet. This limit is stated openly; it is not closed.</li>
+  <li><strong>MAGIC held by organizations.</strong> A large part of all LAMP will sit in the vaults of companies and platforms. Only MAGIC used by verified individuals is meant to count toward votes. Until the rule for organizations is settled and enforced, their MAGIC does not count.</li>
+  <li><strong>Reputation.</strong> How reputation will be measured has not been published, so the voting formula is not in force yet.</li>
+</ul>
+
+<!-- 9 -->
+<h2 id="verify">9. Recognizing genuine LAMP</h2>
+
+<p>Anyone can create a token called LAMP. Only one 56-character code, the <strong>policy ID</strong>, identifies the real one.</p>
+
+<figure>
+<svg viewBox="0 0 720 130" role="img" aria-labelledby="f9t">
+  <title id="f9t">Three steps to check a policy ID</title>
+  <defs>
+    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+  <g class="t">
+    <rect x="10" y="20" width="200" height="90" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="30" y="50" font-size="22" font-weight="700" fill="var(--lamp)">1</text>
+    <text x="55" y="50" font-size="13" font-weight="600">Open an explorer</text>
+    <text x="30" y="74" font-size="12" class="m">from a link on magiclamp.eco,</text>
+    <text x="30" y="92" font-size="12" class="m">never from a message or ad</text>
+    <line x1="210" y1="65" x2="255" y2="65" stroke="var(--muted)" stroke-width="2" marker-end="url(#arr3)"/>
+    <rect x="260" y="20" width="200" height="90" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="280" y="50" font-size="22" font-weight="700" fill="var(--lamp)">2</text>
+    <text x="305" y="50" font-size="13" font-weight="600">Paste the policy ID</text>
+    <text x="280" y="74" font-size="12" class="m">into the explorer's</text>
+    <text x="280" y="92" font-size="12" class="m">search box</text>
+    <line x1="460" y1="65" x2="505" y2="65" stroke="var(--muted)" stroke-width="2" marker-end="url(#arr3)"/>
+    <rect x="510" y="20" width="200" height="90" rx="12" fill="var(--card)" stroke="var(--ok)" stroke-width="2"/>
+    <text x="530" y="50" font-size="22" font-weight="700" fill="var(--ok)">3</text>
+    <text x="555" y="50" font-size="13" font-weight="600">Match all 56</text>
+    <text x="530" y="74" font-size="12" class="m">characters, not just</text>
+    <text x="530" y="92" font-size="12" class="m">the first few</text>
+  </g>
+</svg>
+<figcaption>Figure 9. A fake can copy the name and the first few characters. Only a full match counts.</figcaption>
+</figure>
+
+<p>Until the official policy ID is published, no token is genuine LAMP. After that, only the ID published on magiclamp.eco is. If the policy is ever replaced, the new ID will be announced in full.</p>
+
+<!-- 10 -->
+<h2 id="status">10. Where things stand</h2>
+
+<p>The table shows the state of each part on the date of this edition. It will be updated in later editions.</p>
+
+<p class="sub tcap">Table 6. State of each part on 26 November 2026.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Part</th><th>Status</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Official LAMP on the main network</td><td><span class="status s-not">Not yet</span></td><td>No date set</td></tr>
+    <tr><td>Ceiling, creation and no-burn rules</td><td><span class="status s-build">Built and tested</span></td><td>On a test network; no independent audit yet</td></tr>
+    <tr><td>Distribution system</td><td><span class="status s-build">Running on a test network</span></td><td>ETD will be its first run on the main network</td></tr>
+    <tr><td>MAGIC</td><td><span class="status s-build">In development</span></td><td>Starts after official LAMP exists</td></tr>
+    <tr><td>Governance and DAO</td><td><span class="status s-build">In development</span></td><td>No DAO yet; reputation measure not published</td></tr>
+    <tr><td>MagicLamp Capital</td><td><span class="status s-build">Being established</span></td><td>Proof of formation will be published at magiclamp.eco</td></tr>
+    <tr><td>MagicLamp Foundation</td><td><span class="status s-not">Being formed</span></td><td>Formed by the community; at least 21 seats</td></tr>
+    <tr><td>SRCL</td><td><span class="status s-not">Not open</span></td><td>Only after the DAO exists and three seats are filled</td></tr>
+    <tr><td>RING for contributors</td><td><span class="status s-build">Running on a test network</span></td><td>Not yet on the main network</td></tr>
+    <tr><td>Liquidity share</td><td><span class="status s-not">Placeholder</span></td><td>No plan</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 11 -->
+<h2 id="risks">11. Risks and limits</h2>
+<ul>
+  <li><strong>There may never be a market.</strong> There is no market for LAMP today. The project has no plan to list it and promises nothing about its price.</li>
+  <li><strong>Contracts can have flaws.</strong> They have been tested and reviewed internally, but not audited independently. Once released, a policy cannot be changed; fixing a flaw would mean moving to a different token.</li>
+  <li><strong>The ceiling belongs to one policy.</strong> Nothing in the code forces a future replacement to keep the same ceiling.</li>
+  <li><strong>Committees have real powers for now.</strong> Until the DAO takes over, committees can grant LAMP and move allocations within fixed bounds. The four promises in section 4 are enforced by the contracts; the split into shares in section 5 is not, which is why it is public and every transfer can be checked.</li>
+  <li><strong>You hold your own keys.</strong> Lose a wallet's key or recovery phrase and the LAMP in it is lost.</li>
+  <li><strong>Beware of copies.</strong> Fake tokens and fake airdrops may appear. Trust only the full policy ID and official channels (section 9).</li>
+  <li><strong>Law differs from place to place.</strong> How a token is classified depends on the law where you live, not on what its makers say. Check, or ask for advice.</li>
+</ul>
+
+<!-- 12 -->
+<h2 id="eligibility">12. Who LAMP is not for</h2>
+<p>LAMP is not intended for residents or citizens of Vietnam. It is also not intended for citizens or residents of the United States (US persons as defined in the US securities rule known as Regulation S). Nor is it intended for anyone on the sanctions lists of the United Nations, the United States (kept by its Office of Foreign Assets Control, OFAC), the European Union or the United Kingdom, or for anyone in a country or territory under comprehensive sanctions.</p>
+<p>A check that keeps these groups out must be in place before LAMP is handed out on the main network. It has not been built yet. Today the only barrier is a block by internet address in the ETD service, which cannot tell where someone lives or what nationality they hold. Everyone who receives LAMP remains responsible for obeying the law where they are and the law of their nationality.</p>
+
+<!-- 13 -->
+<h2 id="glossary">13. Glossary</h2>
+<dl class="glossary">
+  <dt>Cardano</dt><dd>The public blockchain MagicLamp runs on. Its own currency is ADA.</dd>
+  <dt>Native asset</dt><dd>A token on Cardano identified by its own policy, which sits in an address and can be sent like ADA.</dd>
+  <dt>Main network</dt><dd>The live Cardano network, where tokens are real. A test network is a practice copy whose tokens are worth nothing.</dd>
+  <dt>Wallet</dt><dd>Software that holds the keys to your tokens. Whoever holds the keys controls the tokens.</dd>
+  <dt>Recovery phrase</dt><dd>The list of words a wallet shows when it is created, from which its keys can be rebuilt. Anyone who has it controls the wallet.</dd>
+  <dt>Block explorer</dt><dd>A public website that shows every transaction and token on the blockchain.</dd>
+  <dt>Policy, policy ID</dt><dd>The rule set that defines a token on Cardano, and the 56-character code that identifies it.</dd>
+  <dt>Epoch</dt><dd>Cardano's cycle of about five days.</dd>
+  <dt>DID, Phoenix DID</dt><dd>A digital identity whose keys belong to its owner, issued through Phoenix Identity (provided by PhoenixKey). It can stand for a person, a company or a service; only a person is verified biometrically and can vote.</dd>
+  <dt>Vault</dt><dd>A place for LAMP that belongs to one DID. LAMP there produces MAGIC.</dd>
+  <dt>Store</dt><dd>A container for LAMP that has not been handed out yet.</dd>
+  <dt>Safe</dt><dd>A container for LAMP belonging to one person, or one list of recipients, under its own rules.</dd>
+  <dt>Share</dt><dd>One of 18 parts of the 36 billion LAMP, each set aside for one purpose.</dd>
+  <dt>Treasury</dt><dd>A shared account that receives unclaimed and leftover LAMP. Nothing is destroyed.</dd>
+  <dt>Platform</dt><dd>A shared service that applications are built on, such as AladinWork or OriLife.</dd>
+  <dt>Stake pool</dt><dd>A server, run by an operator, that produces Cardano blocks. ADA holders can delegate to it.</dd>
+  <dt>Delegating ADA</dt><dd>Lending the weight of your ADA to a stake pool to help secure Cardano. The ADA stays in your wallet.</dd>
+  <dt>Snapshot</dt><dd>A record of who held or delegated what at one moment.</dd>
+  <dt>DePIN</dt><dd>A network of physical devices owned by many people rather than one company.</dd>
+  <dt>Oracle</dt><dd>A service that brings facts from the real world onto the blockchain so contracts can use them.</dd>
+  <dt>Anchoring</dt><dd>Writing a short fingerprint of a record on the blockchain, so anyone can later check that the record has not been changed.</dd>
+  <dt>DAO</dt><dd>A community that decides by vote under published rules. MagicLamp DAO, the voting body of MagicLamp Foundation, does not exist yet.</dd>
+  <dt>MagicLamp Foundation</dt><dd>The organization the community forms to run the ecosystem as a DAO, with at least 21 seats.</dd>
+  <dt>Base, credit, anchor token</dt><dd>LAMP, MAGIC and RING: the asset the economy rests on and that moves freely; the right to use services, locked in a vault; and the recognition of contributions, designed to move only between Phoenix DIDs.</dd>
+</dl>
+
+<!-- 14 -->
+<h2 id="notice">14. Important notice</h2>
+<p>LAMP is designed to be used within the MagicLamp ecosystem. This paper describes how it works. It is not an invitation to invest, an offer to sell or investment advice, and it promises nothing about value or financial gain.</p>
+<ol class="notice">
+  <li><strong>No registration or approval.</strong> Neither this paper nor LAMP has been registered with, approved or confirmed by any government or regulator anywhere.</li>
+  <li><strong>No rights in any company.</strong> Holding LAMP gives no share, dividend, profit, claim on debt or claim on assets of any legal entity.</li>
+  <li><strong>You may lose everything.</strong> LAMP may lose all of its value, and a market for it may never exist.</li>
+  <li><strong>Where it is prohibited.</strong> This paper and LAMP are not meant for anyone in a place where the law forbids them.</li>
+  <li><strong>Plans may change.</strong> Statements about design, plans, timing or future results look ahead; what actually happens may differ substantially, and the content may change before official LAMP is released.</li>
+  <li><strong>No guarantee, no duty to update.</strong> The project does not guarantee that this paper is accurate or complete and is not obliged to update it. Always check against the policy ID on the blockchain.</li>
+  <li><strong>MAGIC and RING.</strong> Neither MAGIC nor RING is an investment or gives rights in any company, and nothing in this paper promises them any value.</li>
+  <li><strong>Tax.</strong> Any tax arising from receiving or holding LAMP or RING is the recipient's own responsibility.</li>
+</ol>
+
+<footer>
+  Detailed figures, the rules of each share and the history of changes are in the Tokenomics and Distribution papers. Official site: https://magiclamp.eco
+</footer>
+
+</main>
+
+<div class="copybar" data-nocopy>
+  <output id="copy-status" aria-live="polite"></output>
+  <button type="button" id="copy-gdocs">Copy for Google Docs</button>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('copy-gdocs');
+  var out = document.getElementById('copy-status');
+  var SERIF = "'Times New Roman', Times, serif";
+  var IMG_W = 624; // 6.5 in, the text width of a Letter or A4 page in Google Docs
+  var SVG_PROPS = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin',
+    'opacity', 'fill-opacity', 'stroke-opacity', 'font-size', 'font-weight', 'font-style', 'text-anchor',
+    'dominant-baseline'];
+
+  function say(msg) { out.textContent = msg; }
+
+  // Rasterize one on-page SVG to a PNG data URL, with every style resolved to a literal value.
+  function svgToPng(svg) {
+    var clone = svg.cloneNode(true);
+    var src = [svg].concat(Array.prototype.slice.call(svg.querySelectorAll('*')));
+    var dst = [clone].concat(Array.prototype.slice.call(clone.querySelectorAll('*')));
+    if (src.length !== dst.length) throw new Error('SVG clone does not match the original');
+    for (var i = 0; i < src.length; i++) {
+      var cs = getComputedStyle(src[i]);
+      var st = SVG_PROPS.map(function (k) { return k + ':' + cs.getPropertyValue(k); });
+      st.push('font-family:' + SERIF);
+      dst[i].setAttribute('style', st.join(';'));
+    }
+    var vb = svg.viewBox.baseVal;
+    if (!vb || !vb.width) throw new Error('SVG without a viewBox');
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', vb.width);
+    clone.setAttribute('height', vb.height);
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', vb.x); bg.setAttribute('y', vb.y);
+    bg.setAttribute('width', vb.width); bg.setAttribute('height', vb.height);
+    bg.setAttribute('style', 'fill:#ffffff');
+    clone.insertBefore(bg, clone.firstChild);
+    var xml = new XMLSerializer().serializeToString(clone);
+    var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = 2;
+        var c = document.createElement('canvas');
+        c.width = Math.round(vb.width * scale); c.height = Math.round(vb.height * scale);
+        var ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        resolve({ src: c.toDataURL('image/png'), w: vb.width, h: vb.height });
+      };
+      img.onerror = function () { reject(new Error('A figure could not be drawn as an image')); };
+      img.src = url;
+    });
+  }
+
+  // Copy the computed look of the page into inline styles that Google Docs keeps on paste.
+  function inlineText(srcRoot, dstRoot) {
+    var src = srcRoot.querySelectorAll('*');
+    var dst = dstRoot.querySelectorAll('*');
+    if (src.length !== dst.length) throw new Error('Page clone does not match the original');
+    for (var i = 0; i < src.length; i++) {
+      var el = src[i];
+      if (el.closest('svg')) continue;
+      var cs = getComputedStyle(el);
+      var tag = el.tagName;
+      var st = ['font-family:' + SERIF, 'color:' + cs.color, 'font-weight:' + cs.fontWeight,
+        'font-style:' + cs.fontStyle];
+      if (/^(P|LI|DD|DT|H1|H2|H3|TD|TH|FIGCAPTION|DIV)$/.test(tag)) {
+        st.push('text-align:' + (cs.textAlign === 'start' ? 'left' : cs.textAlign));
+        st.push('font-size:' + (parseFloat(cs.fontSize) * 0.75).toFixed(1) + 'pt');
+        st.push('line-height:1.15');
+      }
+      if (tag === 'TD' || tag === 'TH') {
+        st.push('border:1px solid #bfbfbf', 'padding:4pt 5pt', 'vertical-align:top');
+        if (tag === 'TH') st.push('background-color:#f2f2f2');
+      }
+      if (tag === 'TABLE') st.push('border-collapse:collapse', 'width:100%');
+      dst[i].setAttribute('style', st.join(';'));
+    }
+  }
+
+  function buildHtml() {
+    var main = document.querySelector('main');
+    var clone = main.cloneNode(true);
+    inlineText(main, clone);
+    var svgs = main.querySelectorAll('figure svg');
+    var slots = clone.querySelectorAll('figure svg');
+    var jobs = Array.prototype.map.call(svgs, svgToPng);
+    return Promise.all(jobs).then(function (pngs) {
+      pngs.forEach(function (png, i) {
+        var img = document.createElement('img');
+        var w = Math.min(IMG_W, png.w);
+        img.src = png.src;
+        img.width = w;
+        img.height = Math.round(png.h * w / png.w);
+        img.alt = (svgs[i].querySelector('title') || {}).textContent || 'Figure';
+        var p = document.createElement('p');
+        p.setAttribute('style', 'text-align:center');
+        p.appendChild(img);
+        slots[i].parentNode.replaceChild(p, slots[i]);
+      });
+      Array.prototype.forEach.call(clone.querySelectorAll('[data-nocopy]'), function (n) { n.remove(); });
+      return { html: '<meta charset="utf-8">' + clone.innerHTML, text: main.innerText, count: pngs.length };
+    });
+  }
+
+  function fallbackCopy(html) {
+    var box = document.createElement('div');
+    box.contentEditable = 'true';
+    box.setAttribute('style', 'position:fixed;left:-99999px;top:0');
+    box.innerHTML = html;
+    document.body.appendChild(box);
+    var r = document.createRange(); r.selectNodeContents(box);
+    var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    var ok = document.execCommand('copy');
+    sel.removeAllRanges(); box.remove();
+    if (!ok) throw new Error('The browser refused to copy');
+  }
+
+  btn.addEventListener('click', function () {
+    var root = document.documentElement;
+    var prevTheme = root.getAttribute('data-theme');
+    root.setAttribute('data-theme', 'light'); // figures and text are copied in the light look
+    btn.disabled = true;
+    say('Preparing text and figures…');
+    var built = buildHtml();
+    var restore = function () {
+      if (prevTheme === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', prevTheme);
+      btn.disabled = false;
+    };
+    var viaApi = (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)
+      ? navigator.clipboard.write([new ClipboardItem({
+          'text/html': built.then(function (r) { return new Blob([r.html], { type: 'text/html' }); }),
+          'text/plain': built.then(function (r) { return new Blob([r.text], { type: 'text/plain' }); })
+        })])
+      : Promise.reject(new Error('no async clipboard'));
+    viaApi.catch(function () { return built.then(function (r) { fallbackCopy(r.html); }); })
+      .then(function () { return built; })
+      .then(function (r) { say('Copied, with ' + r.count + ' figures. Paste into Google Docs with Ctrl+V or Cmd+V.'); })
+      .catch(function (e) { say('Copy failed: ' + e.message); })
+      .then(restore);
+  });
+})();
+</script>
+</body>
+</html>
